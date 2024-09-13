@@ -328,9 +328,9 @@ const CheckOut = () => {
             );
           })}
         </ul>
-        {selectedReservation && (
+        {selectedReservation && isVerified && (
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <h4 className="font-semibold mb-2">Selected Reservation:</h4>
+            <h4 className="font-semibold mb-2">Current Reservation:</h4>
             <p><strong>Guest:</strong> {selectedReservation.name}</p>
             <p><strong>Site:</strong> {selectedReservation.siteNumber}</p>
             <p><strong>Check-in:</strong> {selectedReservation.checkInDate}</p>
@@ -346,19 +346,13 @@ const CheckOut = () => {
       title="Check Out"
       icon={LogOut}
       width="max-w-7xl"
+      sidebar={renderSidebar()}
     >
-      <div className="flex flex-col lg:flex-row">
-        <div className="lg:w-2/3 lg:pr-6 lg:border-r border-gray-200">
-          <Card>
-            <CardContent className="pt-6">
-              {renderContent()}
-            </CardContent>
-          </Card>
-        </div>
-        <div className="lg:w-1/3 mt-6 lg:mt-0 lg:pl-6">
-          {renderSidebar()}
-        </div>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          {renderContent()}
+        </CardContent>
+      </Card>
     </CommonLayout>
   );
 };

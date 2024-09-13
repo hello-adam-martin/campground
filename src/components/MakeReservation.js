@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { ArrowLeft, ArrowRight, Calendar, Check } from 'lucide-react';
 import CommonLayout from './CommonLayout';
@@ -205,6 +204,7 @@ const MakeReservation = () => {
             siteTypes={siteTypes}
             formData={formData}
             handleSiteTypeSelect={handleSiteTypeSelect}
+            handleGuestCountChange={handleGuestCountChange}
           />
         );
       case 2:
@@ -229,7 +229,6 @@ const MakeReservation = () => {
           <Step4
             formData={formData}
             handleInputChange={handleInputChange}
-            handleGuestCountChange={handleGuestCountChange}
           />
         );
       case 5:
@@ -335,46 +334,36 @@ const MakeReservation = () => {
       title={step === 8 ? 'Reservation Confirmed' : 'Make a Reservation'}
       icon={Calendar}
       width="max-w-7xl"
+      sidebar={renderSidebar()}
     >
-      <div className="flex flex-col lg:flex-row">
-        <div className="lg:w-2/3 lg:pr-6 lg:border-r border-gray-200">
-          <Card>
-            <CardContent className="pt-6">
-              {renderStepContent()}
-              {step < 7 && step !== 1 && (
-                <div className="flex justify-between mt-6">
-                  <Button 
-                    onClick={handlePrevious} 
-                    variant="outline"
-                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                  >
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Previous
-                  </Button>
-                  <Button 
-                    onClick={handleNext}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Next <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-              {step === 1 && (
-                <div className="flex justify-end mt-6">
-                  <Button 
-                    onClick={handleNext}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Next <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      {renderStepContent()}
+      {step < 7 && step !== 1 && (
+        <div className="flex justify-between mt-6">
+          <Button 
+            onClick={handlePrevious} 
+            variant="outline"
+            className="border-blue-600 text-blue-600 hover:bg-blue-50"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+          </Button>
+          <Button 
+            onClick={handleNext}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Next <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
-        <div className="lg:w-1/3 mt-6 lg:mt-0 lg:pl-6">
-          {renderSidebar()}
+      )}
+      {step === 1 && (
+        <div className="flex justify-end mt-6">
+          <Button 
+            onClick={handleNext}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Next <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
-      </div>
+      )}
     </CommonLayout>
   );
 };

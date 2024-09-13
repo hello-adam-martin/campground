@@ -32,35 +32,20 @@ const CheckIn = () => {
       const matches = await mockApi.searchReservations(formData.searchTerm);
       setMatchingReservations(matches);
 
-      console.log('Search term:', formData.searchTerm);
-      console.log('Matches:', matches);
-
       if (matches.length === 1) {
-        console.log('Single match found. Reservation ID:', matches[0].id);
-        console.log('Search term (for comparison):', formData.searchTerm);
-        
-        // Convert both to strings and trim any whitespace
         const reservationId = String(matches[0].id).trim();
         const searchTerm = formData.searchTerm.trim();
         
-        console.log('Cleaned reservation ID:', reservationId);
-        console.log('Cleaned search term:', searchTerm);
-        console.log('Do they match?', reservationId === searchTerm);
-
         if (reservationId === searchTerm) {
-          console.log('Exact match found. Skipping verification.');
           setSelectedReservation(matches[0]);
           setIsVerified(true);
           setStep('confirm');
         } else {
-          console.log('No exact match. Proceeding to selection step.');
           setStep('select');
         }
       } else if (matches.length > 1) {
-        console.log('Multiple matches found. Proceeding to selection step.');
         setStep('select');
       } else {
-        console.log('No matches found. Remaining on search step.');
         setStep('search');
       }
       
@@ -339,19 +324,13 @@ const CheckIn = () => {
       title={step === 'info' ? 'Welcome to Our Campground!' : 'Check In'}
       icon={CheckCircle}
       width="max-w-7xl"
+      sidebar={renderSidebar()}
     >
-      <div className="flex flex-col lg:flex-row">
-        <div className="lg:w-2/3 lg:pr-6 lg:border-r border-gray-200">
-          <Card>
-            <CardContent className="pt-6">
-              {renderContent()}
-            </CardContent>
-          </Card>
-        </div>
-        <div className="lg:w-1/3 mt-6 lg:mt-0 lg:pl-6">
-          {renderSidebar()}
-        </div>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          {renderContent()}
+        </CardContent>
+      </Card>
     </CommonLayout>
   );
 };

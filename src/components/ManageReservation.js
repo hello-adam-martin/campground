@@ -206,7 +206,7 @@ const ManageReservation = () => {
       <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4" role="alert">
         <div className="flex">
           <div className="py-1">
-            <Lock className="mr-2 h-5 w-5 text-blue-500" />
+            <Lock className="h-6 w-6 text-blue-500 mr-4" />
           </div>
           <div>
             <p className="font-bold">Verify Your Identity</p>
@@ -375,21 +375,15 @@ const ManageReservation = () => {
       title="Manage My Reservation"
       icon={Settings}
       width="max-w-7xl"
+      sidebar={renderSidebar()}
     >
-      <div className="flex flex-col lg:flex-row">
-        <div className="lg:w-2/3 lg:pr-6 lg:border-r border-gray-200">
-          <Card>
-            <CardContent className="pt-6">
-              {renderContent()}
-            </CardContent>
-          </Card>
-        </div>
-        <div className="lg:w-1/3 mt-6 lg:mt-0 lg:pl-6">
-          {renderSidebar()}
-        </div>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          {renderContent()}
+        </CardContent>
+      </Card>
     </CommonLayout>
   );
-  };
-  
-  export default ManageReservation;
+};
+
+export default ManageReservation;

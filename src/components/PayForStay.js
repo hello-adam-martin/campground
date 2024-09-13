@@ -259,19 +259,13 @@ const PayForStay = () => {
       title="Pay for Past Stay"
       icon={CreditCard}
       width="max-w-7xl"
+      sidebar={renderSidebar()}
     >
-      <div className="flex flex-col lg:flex-row">
-        <div className="lg:w-2/3 lg:pr-6 lg:border-r border-gray-200">
-          <Card>
-            <CardContent className="pt-6">
-              {renderContent()}
-            </CardContent>
-          </Card>
-        </div>
-        <div className="lg:w-1/3 mt-6 lg:mt-0 lg:pl-6">
-          {renderSidebar()}
-        </div>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          {renderContent()}
+        </CardContent>
+      </Card>
     </CommonLayout>
   );
 };
