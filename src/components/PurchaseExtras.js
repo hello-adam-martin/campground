@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { ShoppingCart, ArrowLeft } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import CommonLayout from './CommonLayout';
@@ -13,7 +12,6 @@ import { useCampgroundContext } from '../context/CampgroundContext';
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 const PurchaseExtras = () => {
-  const navigate = useNavigate();
   const { additionalServices } = useCampgroundContext();
   const [step, setStep] = useState('selection');
   const [selectedExtras, setSelectedExtras] = useState({});
