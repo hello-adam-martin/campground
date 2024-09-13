@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Check } from 'lucide-react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import CommonLayout from './CommonLayout';
@@ -97,34 +97,51 @@ const PurchaseExtras = () => {
     }
   };
 
-  const renderSidebar = () => (
-    <div className="space-y-4">
-      <h3 className="text-xl font-semibold">Purchase Process</h3>
-      <ul className="space-y-2">
-        <li className={`flex items-center space-x-2 ${step === 'selection' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'selection' ? 'border-blue-600' : 'border-gray-300'}`}>
-            1
-          </div>
-          <span>Select additional services</span>
-        </li>
-        <li className={`flex items-center space-x-2 ${step === 'payment' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'payment' ? 'border-blue-600' : 'border-gray-300'}`}>
-            2
-          </div>
-          <span>Complete payment</span>
-        </li>
-      </ul>
-      {Object.values(selectedExtras).length > 0 && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <h4 className="font-semibold mb-2">Your Cart:</h4>
-          {Object.values(selectedExtras).map((item) => (
-            <p key={item.id}>{item.name} x {item.quantity}</p>
+  const renderSidebar = () => {
+    const steps = [
+      { key: 'selection', label: 'Select additional services' },
+      { key: 'payment', label: 'Complete payment' }
+    ];
+  
+    const getStepIndex = (currentStep) => steps.findIndex(s => s.key === currentStep);
+    const currentStepIndex = getStepIndex(step);
+  
+    return (
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold">Purchase Process</h3>
+        <ul className="space-y-2">
+          {steps.map((s, index) => (
+            <li key={s.key} 
+                className={`flex items-center space-x-2 ${step === s.key ? 'text-blue-600 font-semibold' : ''}`}>
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                currentStepIndex > index
+                  ? 'bg-blue-100 border-blue-600 text-blue-600' 
+                  : step === s.key 
+                    ? 'border-blue-600' 
+                    : 'border-gray-300'
+              }`}>
+                {currentStepIndex > index ? (
+                  <Check size={16} />
+                ) : (
+                  index + 1
+                )}
+              </div>
+              <span>{s.label}</span>
+            </li>
           ))}
-          <p className="font-bold mt-2">Total: ${totalPrice.toFixed(2)}</p>
-        </div>
-      )}
-    </div>
-  );
+        </ul>
+        {Object.values(selectedExtras).length > 0 && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="font-semibold mb-2">Your Cart:</h4>
+            {Object.values(selectedExtras).map((item) => (
+              <p key={item.id}>{item.name} x {item.quantity}</p>
+            ))}
+            <p className="font-bold mt-2">Total: ${totalPrice.toFixed(2)}</p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <CommonLayout 

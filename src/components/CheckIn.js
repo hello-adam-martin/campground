@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { CheckCircle, Search, Info, MapPin, AlertTriangle, Lock, Loader } from 'lucide-react';
+import { CheckCircle, Search, Info, MapPin, AlertTriangle, Lock, Loader, Check } from 'lucide-react';
 import CommonLayout from './CommonLayout';
 import useForm from '../hooks/useForm';
 import { useCampgroundContext } from '../context/CampgroundContext';
@@ -287,51 +287,52 @@ const CheckIn = () => {
     }
   };
 
-  const renderSidebar = () => (
-    <div className="space-y-4">
-      <h3 className="text-xl font-semibold">Check-In Process</h3>
-      <ul className="space-y-2">
-        <li className={`flex items-center space-x-2 ${step === 'search' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'search' ? 'border-blue-600' : 'border-gray-300'}`}>
-            1
+  const renderSidebar = () => {
+    const steps = [
+      { key: 'search', label: 'Find your reservation' },
+      { key: 'select', label: 'Select your reservation' },
+      { key: 'verify', label: 'Verify identity (if needed)' },
+      { key: 'confirm', label: 'Confirm check-in' },
+      { key: 'info', label: 'Get campsite information' }
+    ];
+  
+    const getStepIndex = (stepKey) => steps.findIndex(s => s.key === stepKey);
+    const currentStepIndex = getStepIndex(step);
+  
+    return (
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold">Check-In Process</h3>
+        <ul className="space-y-2">
+          {steps.map((s, index) => (
+            <li key={s.key} className={`flex items-center space-x-2 ${step === s.key ? 'text-blue-600 font-semibold' : ''}`}>
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                currentStepIndex > index
+                  ? 'bg-blue-100 border-blue-600 text-blue-600' 
+                  : step === s.key 
+                    ? 'border-blue-600' 
+                    : 'border-gray-300'
+              }`}>
+                {currentStepIndex > index ? (
+                  <Check size={16} />
+                ) : (
+                  index + 1
+                )}
+              </div>
+              <span>{s.label}</span>
+            </li>
+          ))}
+        </ul>
+        {selectedReservation && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="font-semibold mb-2">Selected Reservation:</h4>
+            <p><strong>Guest:</strong> {selectedReservation.name}</p>
+            <p><strong>Site:</strong> {selectedReservation.siteNumber}</p>
+            <p><strong>Check-in:</strong> {selectedReservation.checkInDate}</p>
           </div>
-          <span>Find your reservation</span>
-        </li>
-        <li className={`flex items-center space-x-2 ${step === 'select' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'select' ? 'border-blue-600' : 'border-gray-300'}`}>
-            2
-          </div>
-          <span>Select your reservation</span>
-        </li>
-        <li className={`flex items-center space-x-2 ${step === 'verify' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'verify' ? 'border-blue-600' : 'border-gray-300'}`}>
-            3
-          </div>
-          <span>Verify identity (if needed)</span>
-        </li>
-        <li className={`flex items-center space-x-2 ${step === 'confirm' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'confirm' ? 'border-blue-600' : 'border-gray-300'}`}>
-            4
-          </div>
-          <span>Confirm check-in</span>
-        </li>
-        <li className={`flex items-center space-x-2 ${step === 'info' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'info' ? 'border-blue-600' : 'border-gray-300'}`}>
-            5
-          </div>
-          <span>Get campsite information</span>
-        </li>
-      </ul>
-      {selectedReservation && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <h4 className="font-semibold mb-2">Selected Reservation:</h4>
-          <p><strong>Guest:</strong> {selectedReservation.name}</p>
-          <p><strong>Site:</strong> {selectedReservation.siteNumber}</p>
-          <p><strong>Check-in:</strong> {selectedReservation.checkInDate}</p>
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
+  };
 
   return (
     <CommonLayout 

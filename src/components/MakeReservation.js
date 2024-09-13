@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { ArrowLeft, ArrowRight, Calendar } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Check } from 'lucide-react';
 import CommonLayout from './CommonLayout';
 import useForm from '../hooks/useForm';
 import { useCampgroundContext } from '../context/CampgroundContext';
@@ -286,8 +286,18 @@ const MakeReservation = () => {
           "Confirmation"
         ].map((stepName, index) => (
           <li key={index} className={`flex items-center space-x-2 ${step === index + 1 ? 'text-blue-600 font-semibold' : ''}`}>
-            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === index + 1 ? 'border-blue-600' : 'border-gray-300'}`}>
-              {index + 1}
+            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+              step > index + 1 
+                ? 'bg-blue-100 border-blue-600 text-blue-600' 
+                : step === index + 1 
+                  ? 'border-blue-600' 
+                  : 'border-gray-300'
+            }`}>
+              {step > index + 1 ? (
+                <Check size={16} />
+              ) : (
+                index + 1
+              )}
             </div>
             <span>{stepName}</span>
           </li>

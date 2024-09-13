@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { LogOut, AlertTriangle, Lock, Search, Info, Loader } from 'lucide-react';
+import { LogOut, AlertTriangle, Lock, Search, Info, Loader, Check } from 'lucide-react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import CommonLayout from './CommonLayout';
@@ -288,46 +288,58 @@ const CheckOut = () => {
     }
   };
 
-  const renderSidebar = () => (
-    <div className="space-y-4">
-      <h3 className="text-xl font-semibold">Check-Out Process</h3>
-      <ul className="space-y-2">
-        <li className={`flex items-center space-x-2 ${step === 'search' || step === 'select' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'search' || step === 'select' ? 'border-blue-600' : 'border-gray-300'}`}>
-            1
+  const renderSidebar = () => {
+    const steps = [
+      { key: ['search', 'select'], label: 'Find your reservation' },
+      { key: 'verify', label: 'Verify identity (if needed)' },
+      { key: 'confirm', label: 'Confirm details and add extras' },
+      { key: 'payment', label: 'Complete payment' }
+    ];
+  
+    const getStepIndex = (currentStep) => steps.findIndex(s => 
+      Array.isArray(s.key) ? s.key.includes(currentStep) : s.key === currentStep
+    );
+    const currentStepIndex = getStepIndex(step);
+  
+    return (
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold">Check-Out Process</h3>
+        <ul className="space-y-2">
+          {steps.map((s, index) => {
+            const isCurrentStep = Array.isArray(s.key) ? s.key.includes(step) : s.key === step;
+            return (
+              <li key={Array.isArray(s.key) ? s.key.join('-') : s.key} 
+                  className={`flex items-center space-x-2 ${isCurrentStep ? 'text-blue-600 font-semibold' : ''}`}>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                  currentStepIndex > index
+                    ? 'bg-blue-100 border-blue-600 text-blue-600' 
+                    : isCurrentStep 
+                      ? 'border-blue-600' 
+                      : 'border-gray-300'
+                }`}>
+                  {currentStepIndex > index ? (
+                    <Check size={16} />
+                  ) : (
+                    index + 1
+                  )}
+                </div>
+                <span>{s.label}</span>
+              </li>
+            );
+          })}
+        </ul>
+        {selectedReservation && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="font-semibold mb-2">Selected Reservation:</h4>
+            <p><strong>Guest:</strong> {selectedReservation.name}</p>
+            <p><strong>Site:</strong> {selectedReservation.siteNumber}</p>
+            <p><strong>Check-in:</strong> {selectedReservation.checkInDate}</p>
+            {step === 'payment' && <p className="font-bold mt-2">Total: ${totalPrice.toFixed(2)}</p>}
           </div>
-          <span>Find your reservation</span>
-        </li>
-        <li className={`flex items-center space-x-2 ${step === 'verify' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'verify' ? 'border-blue-600' : 'border-gray-300'}`}>
-            2
-          </div>
-          <span>Verify identity (if needed)</span>
-        </li>
-        <li className={`flex items-center space-x-2 ${step === 'confirm' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'confirm' ? 'border-blue-600' : 'border-gray-300'}`}>
-            3
-          </div>
-          <span>Confirm details and add extras</span>
-        </li>
-        <li className={`flex items-center space-x-2 ${step === 'payment' ? 'text-blue-600 font-semibold' : ''}`}>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 'payment' ? 'border-blue-600' : 'border-gray-300'}`}>
-            4
-          </div>
-          <span>Complete payment</span>
-        </li>
-      </ul>
-      {selectedReservation && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <h4 className="font-semibold mb-2">Selected Reservation:</h4>
-          <p><strong>Guest:</strong> {selectedReservation.name}</p>
-          <p><strong>Site:</strong> {selectedReservation.siteNumber}</p>
-          <p><strong>Check-in:</strong> {selectedReservation.checkInDate}</p>
-          {step === 'payment' && <p className="font-bold mt-2">Total: ${totalPrice.toFixed(2)}</p>}
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
+  };
 
   return (
     <CommonLayout 
