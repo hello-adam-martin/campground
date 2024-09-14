@@ -13,6 +13,7 @@ const config = {
     }
   },
   campground: {
+    
     siteTypes: [
       {
         id: 'powered',

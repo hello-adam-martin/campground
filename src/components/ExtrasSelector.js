@@ -1,12 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { Plus, Minus } from 'lucide-react';
 
 const ExtrasSelector = ({ selectedExtras, onExtrasChange, availableExtras = [] }) => {
-  useEffect(() => {
-    console.log('Available Extras in ExtrasSelector:', availableExtras);
-  }, [availableExtras]);
-
   const handleServiceToggle = (service) => {
     onExtrasChange(prevExtras => {
       const updatedExtras = { ...prevExtras };
@@ -46,30 +43,28 @@ const ExtrasSelector = ({ selectedExtras, onExtrasChange, availableExtras = [] }
         <div key={service.id} className="flex justify-between items-center">
           <span className="text-sm sm:text-base">{service.name} - ${service.price.toFixed(2)}</span>
           {selectedExtras[service.id] ? (
-            <div className="flex items-center space-x-2">
-              {service.allowMultiple && (
-                <Button
-                  type="button"
-                  onClick={() => handleServiceQuantityChange(service, -1)}
-                  variant="outline"
-                  className="p-1"
-                >
-                  <Minus size={16} />
-                </Button>
-              )}
-              <span className="w-8 text-center">
-                {selectedExtras[service.id].quantity}
-              </span>
-              {service.allowMultiple && (
-                <Button
-                  type="button"
-                  onClick={() => handleServiceQuantityChange(service, 1)}
-                  variant="outline"
-                  className="p-1"
-                >
-                  <Plus size={16} />
-                </Button>
-              )}
+            <div className="flex items-center">
+              <Button
+                type="button"
+                onClick={() => handleServiceQuantityChange(service, -1)}
+                className="px-3 py-2"
+              >
+                <Minus size={16} />
+              </Button>
+              <Input
+                type="number"
+                value={selectedExtras[service.id].quantity}
+                onChange={(e) => handleServiceQuantityChange(service, parseInt(e.target.value) - selectedExtras[service.id].quantity)}
+                className="mx-2 w-16 text-center"
+                readOnly
+              />
+              <Button
+                type="button"
+                onClick={() => handleServiceQuantityChange(service, 1)}
+                className="px-3 py-2"
+              >
+                <Plus size={16} />
+              </Button>
             </div>
           ) : (
             <Button

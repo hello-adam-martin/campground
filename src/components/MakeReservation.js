@@ -13,18 +13,18 @@ import Step5 from './reservations/Step5';
 import Step6 from './reservations/Step6';
 import Step7 from './reservations/Step7';
 import Step8 from './reservations/Step8';
-import { mockApi } from '../services/mockApi';
+import { getSiteTypes, getAvailableSites, createReservation, getAdditionalServices } from '../services/api';
+import { addDays, format } from 'date-fns';
 
 const MakeReservation = () => {
   const navigate = useNavigate();
   const { siteTypes, rules, additionalServices, updateContext } = useCampgroundContext();
   const [step, setStep] = useState(1);
-  const [skippedSteps, setSkippedSteps] = useState([]);
   const { formData, handleInputChange, setField } = useForm({
     siteType: '',
     startDate: null,
     nights: 1,
-    maxNights: 1,
+    maxNights: 14,
     siteNumber: '',
     firstName: '',
     lastName: '',
@@ -35,7 +35,7 @@ const MakeReservation = () => {
   });
   const [selectedExtras, setSelectedExtras] = useState({});
   const [totalPrice, setTotalPrice] = useState(0);
-  const [availableSites, setAvailableSites] = useState({});
+  const [availableSites, setAvailableSites] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const dataFetchedRef = useRef(false);
 
@@ -46,15 +46,16 @@ const MakeReservation = () => {
 
       try {
         setIsLoading(true);
-        const [fetchedSiteTypes, fetchedRules, fetchedAdditionalServices] = await Promise.all([
-          mockApi.getSiteTypes(),
-          mockApi.getRules(),
-          mockApi.getAdditionalServices()
+        const [fetchedSiteTypes, fetchedAdditionalServices] = await Promise.all([
+          getSiteTypes(),
+          getAdditionalServices()
         ]);
+
+        console.log('Fetched site types:', fetchedSiteTypes);
+        console.log('Fetched additional services:', fetchedAdditionalServices);
 
         updateContext({
           siteTypes: fetchedSiteTypes,
-          rules: fetchedRules,
           additionalServices: fetchedAdditionalServices
         });
       } catch (error) {
@@ -68,29 +69,28 @@ const MakeReservation = () => {
 
   useEffect(() => {
     if (formData.siteType) {
-      const selectedSiteType = siteTypes.find(type => type.id === formData.siteType);
-      if (selectedSiteType) {
-        const fetchAvailableSites = async () => {
+      const fetchAvailableSites = async () => {
+        setIsLoading(true);
+        try {
           const today = new Date();
-          const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-          
-          if (selectedSiteType.limitedAvailability) {
-            const sites = await mockApi.getAvailableSites(today, thirtyDaysLater, formData.siteType);
-            setAvailableSites(sites);
-          } else {
-            // For unlimited availability (e.g., unpowered sites), set all dates as available
-            const unlimitedAvailability = {};
-            for (let d = new Date(today); d <= thirtyDaysLater; d.setDate(d.getDate() + 1)) {
-              const dateString = d.toISOString().split('T')[0];
-              unlimitedAvailability[dateString] = { [formData.siteType]: selectedSiteType.totalSites };
-            }
-            setAvailableSites(unlimitedAvailability);
-          }
-        };
-        fetchAvailableSites();
-      }
+          const thirtyDaysLater = addDays(today, 30);
+          const sites = await getAvailableSites(
+            format(today, 'yyyy-MM-dd'),
+            format(thirtyDaysLater, 'yyyy-MM-dd'),
+            formData.siteType
+          );
+          console.log('Fetched available sites:', sites);
+          setAvailableSites(sites);
+        } catch (error) {
+          console.error("Error fetching available sites:", error);
+          setAvailableSites([]);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchAvailableSites();
     }
-  }, [formData.siteType, siteTypes]);
+  }, [formData.siteType]);
 
   const calculateTotalPrice = useCallback(() => {
     if (!formData.startDate || !formData.nights || !formData.siteType) return 0;
@@ -98,11 +98,10 @@ const MakeReservation = () => {
     const selectedSiteType = siteTypes.find(type => type.id === formData.siteType);
     if (!selectedSiteType) return 0;
 
-    const { pricing } = selectedSiteType;
-    const basePrice = pricing.basePrice * formData.nights;
+    const basePrice = selectedSiteType.base_price * formData.nights;
     
-    const extraAdults = Math.max(0, formData.adultCount - pricing.baseGuests);
-    const extraGuestPrice = extraAdults * pricing.extraGuestPrice * formData.nights;
+    const extraAdults = Math.max(0, formData.adultCount - selectedSiteType.base_guests);
+    const extraGuestPrice = extraAdults * selectedSiteType.extra_guest_price * formData.nights;
     
     const extrasPrice = Object.values(selectedExtras).reduce((total, item) => 
       total + (item.price * item.quantity), 0);
@@ -116,30 +115,24 @@ const MakeReservation = () => {
   }, [calculateTotalPrice]);
 
   const handleSiteTypeSelect = (typeId) => {
+    console.log('Selected site type:', typeId);
     setField('siteType', typeId);
-    const selectedType = siteTypes.find(type => type.id === typeId);
-    if (selectedType && !selectedType.requiresSiteSelection) {
-      setSkippedSteps(prev => [...prev, 3]);
-    } else {
-      setSkippedSteps(prev => prev.filter(s => s !== 3));
-    }
-    setStep(2);
   };
 
-  const handleDateSelect = (date, maxNights) => {
+  const handleDateSelect = (date) => {
+    console.log('Selected date:', date);
     setField('startDate', date);
     setField('nights', 1);
-    setField('maxNights', maxNights);
-    setField('siteNumber', '');
   };
 
   const handleNightsChange = (nights) => {
-    setField('nights', Math.min(nights, formData.maxNights));
-    setField('siteNumber', '');
+    console.log('Changed nights:', nights);
+    setField('nights', Math.max(1, nights));
   };
 
   const handleGuestCountChange = (e) => {
     const { name, value } = e.target;
+    console.log('Changed guest count:', name, value);
     setField(name, Math.max(0, parseInt(value) || 0));
   };
 
@@ -152,38 +145,42 @@ const MakeReservation = () => {
       alert("Please select an arrival date and specify the number of nights.");
       return;
     }
-    let nextStep = step + 1;
-    while (skippedSteps.includes(nextStep)) {
-      nextStep++;
-    }
-    setStep(nextStep);
+    console.log('Moving to next step:', step + 1);
+    setStep(step + 1);
   };
 
   const handlePrevious = () => {
-    let prevStep = step - 1;
-    while (skippedSteps.includes(prevStep) && prevStep > 0) {
-      prevStep--;
-    }
-    setStep(prevStep);
+    console.log('Moving to previous step:', step - 1);
+    setStep(step - 1);
   };
 
   const handlePaymentSuccess = async (paymentIntent) => {
     try {
       const reservationData = {
-        ...formData,
-        extras: selectedExtras,
+        siteId: formData.siteNumber || null,
+        siteType: formData.siteType,
+        startDate: format(formData.startDate, 'yyyy-MM-dd'),
+        endDate: format(addDays(formData.startDate, formData.nights - 1), 'yyyy-MM-dd'),
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        adultCount: formData.adultCount,
+        childCount: formData.childCount,
         totalPrice,
-        paymentIntentId: paymentIntent.id
+        extras: Object.values(selectedExtras)
       };
-      const result = await mockApi.makeReservation(reservationData);
+      console.log('Creating reservation with data:', reservationData);
+      const result = await createReservation(reservationData);
       if (result.success) {
+        console.log('Reservation created successfully');
         setStep(8);
       } else {
-        throw new Error('Reservation creation failed');
+        throw new Error(result.error || 'Reservation creation failed');
       }
     } catch (error) {
-      console.error("Error creating reservation:", error);
-      alert('Failed to create reservation. Please try again.');
+      console.error("Error creating reservation:", error.message);
+      alert(`Failed to create reservation: ${error.message}. Please try again or contact support.`);
     }
   };
 
@@ -196,6 +193,10 @@ const MakeReservation = () => {
     if (isLoading) {
       return <p>Loading...</p>;
     }
+
+    console.log('Rendering step:', step);
+    console.log('Current form data:', formData);
+    console.log('Available sites:', availableSites);
 
     switch(step) {
       case 1:
@@ -222,6 +223,7 @@ const MakeReservation = () => {
             formData={formData}
             handleInputChange={handleInputChange}
             siteTypes={siteTypes}
+            availableSites={availableSites}
           />
         );
       case 4:
@@ -304,11 +306,18 @@ const MakeReservation = () => {
       </ul>
       {step !== 8 && (
         <div className="mt-6 pt-6 border-t border-gray-200">
-          <h4 className="font-semibold mb-2">Reservation Summary:</h4>
+          <h4 className="font-semibold mb-2 flex items-center">
+            <Calendar className="mr-2 h-5 w-5 text-blue-500" />
+            Reservation Summary
+          </h4>
           <p><strong>Site Type:</strong> {formData.siteType ? siteTypes.find(type => type.id === formData.siteType)?.name : 'Not selected'}</p>
-          <p><strong>Check-in:</strong> {formData.startDate?.toLocaleDateString()}</p>
-          <p><strong>Nights:</strong> {formData.nights}</p>
-          <p><strong>Check-out:</strong> {formData.startDate && new Date(formData.startDate.getTime() + formData.nights * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
+          {formData.startDate && (
+            <>
+              <p><strong>Check-in:</strong> {format(formData.startDate, 'MMM d, yyyy')}</p>
+              <p><strong>Check-out:</strong> {format(addDays(formData.startDate, formData.nights), 'MMM d, yyyy')}</p>
+              <p><strong>Nights:</strong> {formData.nights}</p>
+            </>
+          )}
           {formData.siteNumber && <p><strong>Site Number:</strong> {formData.siteNumber}</p>}
           <p><strong>Guests:</strong> {formData.adultCount} Adults, {formData.childCount} Children</p>
           {Object.values(selectedExtras).length > 0 && (
@@ -337,28 +346,20 @@ const MakeReservation = () => {
       sidebar={renderSidebar()}
     >
       {renderStepContent()}
-      {step < 7 && step !== 1 && (
+      {step < 7 && (
         <div className="flex justify-between mt-6">
-          <Button 
-            onClick={handlePrevious} 
-            variant="outline"
-            className="border-blue-600 text-blue-600 hover:bg-blue-50"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Previous
-          </Button>
-          <Button 
-            onClick={handleNext}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Next <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      )}
-      {step === 1 && (
-        <div className="flex justify-end mt-6">
+          {step > 1 && (
+            <Button 
+              onClick={handlePrevious} 
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+            </Button>
+          )}
           <Button 
             onClick={handleNext}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white ml-auto"
           >
             Next <ArrowRight className="ml-2 h-4 w-4" />
           </Button>

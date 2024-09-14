@@ -1,84 +1,113 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, AlertTriangle, Loader } from 'lucide-react';
 import ReservationCalendar from '../ReservationCalendar';
+import { getAvailableSites } from '../../services/api';
+import { startOfMonth } from 'date-fns';
 
-const Step2 = ({ formData, availableSites, handleDateSelect, handleNightsChange }) => {
+const Step2 = ({ formData, handleDateSelect, handleNightsChange }) => {
+  const [availability, setAvailability] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [calendarMonth, setCalendarMonth] = useState(startOfMonth(new Date()));
+
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (formData.siteType) {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const availabilityData = await getAvailableSites(
+            calendarMonth,
+            formData.siteType
+          );
+          setAvailability(prevAvailability => ({...prevAvailability, ...availabilityData}));
+        } catch (error) {
+          console.error('Error fetching availability:', error);
+          setError('Failed to fetch availability. Please try again.');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchAvailability();
+  }, [formData.siteType, calendarMonth]);
+
+  const handleChangeMonth = (newMonth) => {
+    setCalendarMonth(newMonth);
+  };
+
   const incrementNights = () => {
-    if (formData.nights < formData.maxNights) {
-      handleNightsChange(formData.nights + 1);
-    }
+    handleNightsChange(formData.nights + 1);
   };
 
   const decrementNights = () => {
-    if (formData.nights > 1) {
-      handleNightsChange(formData.nights - 1);
-    }
+    handleNightsChange(Math.max(1, formData.nights - 1));
   };
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg lg:text-xl font-semibold mb-4">Step 2: Select Your Arrival Date and Duration</h3>
-      <ReservationCalendar 
-        availableSites={availableSites}
-        onDateSelect={handleDateSelect}
-        selectedDate={formData.startDate}
-        siteType={formData.siteType}
-      />
+      <h3 className="text-lg lg:text-xl font-semibold mb-4">Step 2: Select Dates</h3>
+      
+      {isLoading ? (
+        <div className="flex items-center justify-center p-4">
+          <Loader className="animate-spin mr-2" />
+          <p>Loading availability...</p>
+        </div>
+      ) : error ? (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+          <div className="flex">
+            <AlertTriangle className="h-6 w-6 text-red-500 mr-2" />
+            <p>{error}</p>
+          </div>
+        </div>
+      ) : (
+        <ReservationCalendar 
+          availableSites={availability}
+          onDateSelect={handleDateSelect}
+          selectedDate={formData.startDate}
+          siteType={formData.siteType}
+          onChangeMonth={handleChangeMonth}
+          startDate={calendarMonth}
+        />
+      )}
+
       {formData.startDate && (
-        <div className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="nights" className="block text-sm font-medium text-gray-700 mb-1">
-              Number of Nights
-            </label>
-            <div className="flex items-center">
-              <Button 
-                type="button" 
-                onClick={decrementNights} 
-                disabled={formData.nights <= 1}
-                className="px-3 py-2"
-              >
-                <Minus size={16} />
-              </Button>
-              <Input
-                type="number"
-                id="nights"
-                name="nights"
-                value={formData.nights}
-                onChange={(e) => handleNightsChange(parseInt(e.target.value) || 1)}
-                min="1"
-                max={formData.maxNights}
-                className="mx-2 w-20 text-center"
-                readOnly
-              />
-              <Button 
-                type="button" 
-                onClick={incrementNights} 
-                disabled={formData.nights >= formData.maxNights}
-                className="px-3 py-2"
-              >
-                <Plus size={16} />
-              </Button>
-            </div>
-            <p className="text-sm text-gray-500 mt-1">Maximum stay: {formData.maxNights} nights</p>
+        <div className="mt-4">
+          <label htmlFor="nights" className="block text-sm font-medium text-gray-700 mb-1">
+            Number of Nights
+          </label>
+          <div className="flex items-center">
+            <Button 
+              type="button" 
+              onClick={decrementNights}
+              className="px-3 py-2"
+              disabled={formData.nights <= 1}
+            >
+              <Minus size={16} />
+            </Button>
+            <Input
+              type="number"
+              id="nights"
+              name="nights"
+              value={formData.nights}
+              onChange={(e) => handleNightsChange(parseInt(e.target.value) || 1)}
+              min="1"
+              max={formData.maxNights}
+              className="mx-2 w-20 text-center"
+            />
+            <Button 
+              type="button" 
+              onClick={incrementNights}
+              className="px-3 py-2"
+              disabled={formData.nights >= formData.maxNights}
+            >
+              <Plus size={16} />
+            </Button>
           </div>
-          <div className="bg-gray-100 p-3 rounded-md">
-            <div className="flex flex-col space-y-2">
-              <div className="flex justify-between items-center">
-                <p className="text-sm font-medium">Check-in:</p>
-                <p className="text-sm">{formData.startDate.toLocaleDateString()}</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-sm font-medium">Check-out:</p>
-                <p className="text-sm">{new Date(formData.startDate.getTime() + formData.nights * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-sm font-medium">Total nights:</p>
-                <p className="text-sm">{formData.nights}</p>
-              </div>
-            </div>
-          </div>
+          <p className="text-sm text-gray-500 mt-1">Maximum stay: {formData.maxNights} nights</p>
         </div>
       )}
     </div>

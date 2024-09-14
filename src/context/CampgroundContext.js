@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockApi } from '../services/mockApi';
+import { getSiteTypes, getAdditionalServices, getRules } from '../services/api';
+import config from '../config/appConfig';
 
 const CampgroundContext = createContext();
 
@@ -7,30 +8,33 @@ export const useCampgroundContext = () => useContext(CampgroundContext);
 
 export const CampgroundProvider = ({ children }) => {
   const [contextData, setContextData] = useState({
-    pricing: {},
     siteTypes: [],
-    rules: [],
     additionalServices: [],
+    rules: [],
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [pricing, siteTypes, rules, additionalServices] = await Promise.all([
-          mockApi.getPricing(),
-          mockApi.getSiteTypes(),
-          mockApi.getRules(),
-          mockApi.getAdditionalServices()
+        const [fetchedSiteTypes, fetchedAdditionalServices, fetchedRules] = await Promise.all([
+          getSiteTypes().catch(() => []),
+          getAdditionalServices().catch(() => []),
+          getRules().catch(() => [])
         ]);
 
         setContextData({
-          pricing,
-          siteTypes,
-          rules,
-          additionalServices
+          siteTypes: fetchedSiteTypes.length > 0 ? fetchedSiteTypes : config.campground.siteTypes,
+          additionalServices: fetchedAdditionalServices.length > 0 ? fetchedAdditionalServices : config.campground.additionalServices,
+          rules: fetchedRules.length > 0 ? fetchedRules : config.campground.rules,
         });
       } catch (error) {
         console.error("Error fetching data:", error);
+        // Fallback to config data if fetch fails
+        setContextData({
+          siteTypes: config.campground.siteTypes,
+          additionalServices: config.campground.additionalServices,
+          rules: config.campground.rules,
+        });
       }
     };
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Plus, Minus, Calendar, Check, ShoppingCart } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -35,6 +35,14 @@ const PayForStay = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleIncrement = (field) => {
+    setFormData(prev => ({ ...prev, [field]: prev[field] + 1 }));
+  };
+
+  const handleDecrement = (field) => {
+    setFormData(prev => ({ ...prev, [field]: Math.max(1, prev[field] - 1) }));
   };
 
   const handleExtrasChange = (updatedExtras) => {
@@ -83,37 +91,90 @@ const PayForStay = () => {
 
   const renderStayDetails = () => (
     <div className="space-y-6">
-      <div>
-        <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
-          Start Date
-        </label>
-        <Input
-          type="date"
-          id="startDate"
-          name="startDate"
-          value={formData.startDate}
-          onChange={handleInputChange}
-          required
-        />
+      <div className="bg-gray-100 p-4 rounded-md">
+        <h3 className="text-lg font-semibold mb-4">Stay Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
+              Start Date
+            </label>
+            <div className="flex items-center">
+              <Calendar className="mr-2 h-5 w-5 text-gray-400" />
+              <Input
+                type="date"
+                id="startDate"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleInputChange}
+                className="flex-grow"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="daysStayed" className="block text-sm font-medium text-gray-700 mb-1">
+              Number of Nights
+            </label>
+            <div className="flex items-center">
+              <Button 
+                type="button" 
+                onClick={() => handleDecrement('daysStayed')} 
+                className="px-3 py-2"
+              >
+                <Minus size={16} />
+              </Button>
+              <Input
+                type="number"
+                id="daysStayed"
+                name="daysStayed"
+                value={formData.daysStayed}
+                onChange={handleInputChange}
+                className="mx-2 w-20 text-center"
+                readOnly
+              />
+              <Button 
+                type="button" 
+                onClick={() => handleIncrement('daysStayed')}
+                className="px-3 py-2"
+              >
+                <Plus size={16} />
+              </Button>
+            </div>
+          </div>
+          <div>
+            <label htmlFor="guestsOver13" className="block text-sm font-medium text-gray-700 mb-1">
+              Number of Guests (over 13)
+            </label>
+            <div className="flex items-center">
+              <Button 
+                type="button" 
+                onClick={() => handleDecrement('guestsOver13')} 
+                className="px-3 py-2"
+              >
+                <Minus size={16} />
+              </Button>
+              <Input
+                type="number"
+                id="guestsOver13"
+                name="guestsOver13"
+                value={formData.guestsOver13}
+                onChange={handleInputChange}
+                className="mx-2 w-20 text-center"
+                readOnly
+              />
+              <Button 
+                type="button" 
+                onClick={() => handleIncrement('guestsOver13')}
+                className="px-3 py-2"
+              >
+                <Plus size={16} />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div>
-        <label htmlFor="daysStayed" className="block text-sm font-medium text-gray-700 mb-1">
-          Number of Days Stayed
-        </label>
-        <Input
-          type="number"
-          id="daysStayed"
-          name="daysStayed"
-          value={formData.daysStayed}
-          onChange={handleInputChange}
-          min="1"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Site Type
-        </label>
+      <div className="bg-gray-100 p-4 rounded-md">
+        <h3 className="text-lg font-semibold mb-4">Site Type</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {siteTypes.map(type => {
             const IconComponent = LucideIcons[type.icon];
@@ -141,24 +202,11 @@ const PayForStay = () => {
           })}
         </div>
       </div>
-      <div>
-        <label htmlFor="guestsOver13" className="block text-sm font-medium text-gray-700 mb-1">
-          Number of Guests (over 13)
-        </label>
-        <Input
-          type="number"
-          id="guestsOver13"
-          name="guestsOver13"
-          value={formData.guestsOver13}
-          onChange={handleInputChange}
-          min="1"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="bg-gray-100 p-4 rounded-md">
+        <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <ShoppingCart className="mr-2 h-5 w-5" />
           Additional Services
-        </label>
+        </h3>
         <ExtrasSelector
           selectedExtras={selectedExtras}
           onExtrasChange={handleExtrasChange}
@@ -180,7 +228,7 @@ const PayForStay = () => {
       <div className="bg-gray-100 p-4 rounded-md">
         <h3 className="font-semibold mb-2">Stay Summary:</h3>
         <p>Start Date: {formData.startDate}</p>
-        <p>Days Stayed: {formData.daysStayed}</p>
+        <p>Nights Stayed: {formData.daysStayed}</p>
         <p>Site Type: {siteTypes.find(site => site.id === formData.siteType)?.name}</p>
         <p>Guests (over 13): {formData.guestsOver13}</p>
         {Object.values(selectedExtras).length > 0 && (
@@ -222,7 +270,7 @@ const PayForStay = () => {
       <ul className="space-y-2">
         <li className={`flex items-center space-x-2 ${step === 1 ? 'text-blue-600 font-semibold' : ''}`}>
           <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${step === 1 ? 'border-blue-600' : 'border-gray-300'}`}>
-            1
+            {step > 1 ? <Check size={16} /> : 1}
           </div>
           <span>Enter stay details</span>
         </li>
@@ -236,7 +284,7 @@ const PayForStay = () => {
       <div className="mt-6 pt-6 border-t border-gray-200">
         <h4 className="font-semibold mb-2">Stay Summary:</h4>
         <p>Start Date: {formData.startDate}</p>
-        <p>Days Stayed: {formData.daysStayed}</p>
+        <p>Nights Stayed: {formData.daysStayed}</p>
         <p>Site Type: {siteTypes.find(site => site.id === formData.siteType)?.name || 'Not selected'}</p>
         <p>Guests (over 13): {formData.guestsOver13}</p>
         {Object.values(selectedExtras).length > 0 && (
