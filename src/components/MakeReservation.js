@@ -14,7 +14,7 @@ import Step6 from './reservations/Step6';
 import Step7 from './reservations/Step7';
 import Step8 from './reservations/Step8';
 import { getSiteTypes, getAvailableSites, createReservation, getAdditionalServices } from '../services/api';
-import { addDays, format } from 'date-fns';
+import { addDays, format, differenceInDays } from 'date-fns';
 
 const MakeReservation = () => {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ const MakeReservation = () => {
   const { formData, handleInputChange, setField } = useForm({
     siteType: '',
     startDate: null,
-    nights: 1,
+    endDate: null,
     maxNights: 14,
     siteNumber: '',
     firstName: '',
@@ -119,10 +119,9 @@ const MakeReservation = () => {
     setField('siteType', typeId);
   };
 
-  const handleDateSelect = (date) => {
-    console.log('Selected date:', date);
-    setField('startDate', date);
-    setField('nights', 1);
+  const handleDateSelect = (start, end) => {
+    setField('startDate', start);
+    setField('endDate', end);
   };
 
   const handleNightsChange = (nights) => {
@@ -311,12 +310,12 @@ const MakeReservation = () => {
             Reservation Summary
           </h4>
           <p><strong>Site Type:</strong> {formData.siteType ? siteTypes.find(type => type.id === formData.siteType)?.name : 'Not selected'}</p>
-          {formData.startDate && (
-            <>
-              <p><strong>Check-in:</strong> {format(formData.startDate, 'MMM d, yyyy')}</p>
-              <p><strong>Check-out:</strong> {format(addDays(formData.startDate, formData.nights), 'MMM d, yyyy')}</p>
-              <p><strong>Nights:</strong> {formData.nights}</p>
-            </>
+          {formData.startDate && formData.endDate && (
+          <>
+          <p><strong>Check-in:</strong> {format(formData.startDate, 'MMM d, yyyy')}</p>
+          <p><strong>Check-out:</strong> {format(formData.endDate, 'MMM d, yyyy')}</p>
+          <p><strong>Nights:</strong> {differenceInDays(formData.endDate, formData.startDate)}</p>
+          </>
           )}
           {formData.siteNumber && <p><strong>Site Number:</strong> {formData.siteNumber}</p>}
           <p><strong>Guests:</strong> {formData.adultCount} Adults, {formData.childCount} Children</p>

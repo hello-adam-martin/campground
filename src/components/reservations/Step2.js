@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Plus, Minus, AlertTriangle, Loader } from 'lucide-react';
+import { AlertTriangle, Loader } from 'lucide-react';
 import ReservationCalendar from '../ReservationCalendar';
 import { getAvailableSites } from '../../services/api';
-import { startOfMonth } from 'date-fns';
+import { startOfMonth, differenceInDays } from 'date-fns';
 
-const Step2 = ({ formData, handleDateSelect, handleNightsChange }) => {
+const Step2 = ({ formData, handleDateSelect }) => {
   const [availability, setAvailability] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,12 +37,8 @@ const Step2 = ({ formData, handleDateSelect, handleNightsChange }) => {
     setCalendarMonth(newMonth);
   };
 
-  const incrementNights = () => {
-    handleNightsChange(formData.nights + 1);
-  };
-
-  const decrementNights = () => {
-    handleNightsChange(Math.max(1, formData.nights - 1));
+  const handleDateRangeSelect = (start, end) => {
+    handleDateSelect(start, end);
   };
 
   return (
@@ -66,48 +60,20 @@ const Step2 = ({ formData, handleDateSelect, handleNightsChange }) => {
       ) : (
         <ReservationCalendar 
           availableSites={availability}
-          onDateSelect={handleDateSelect}
-          selectedDate={formData.startDate}
+          onDateSelect={handleDateRangeSelect}
+          checkInDate={formData.startDate}
+          checkOutDate={formData.endDate}
           siteType={formData.siteType}
           onChangeMonth={handleChangeMonth}
           startDate={calendarMonth}
         />
       )}
 
-      {formData.startDate && (
+      {formData.startDate && formData.endDate && (
         <div className="mt-4">
-          <label htmlFor="nights" className="block text-sm font-medium text-gray-700 mb-1">
-            Number of Nights
-          </label>
-          <div className="flex items-center">
-            <Button 
-              type="button" 
-              onClick={decrementNights}
-              className="px-3 py-2"
-              disabled={formData.nights <= 1}
-            >
-              <Minus size={16} />
-            </Button>
-            <Input
-              type="number"
-              id="nights"
-              name="nights"
-              value={formData.nights}
-              onChange={(e) => handleNightsChange(parseInt(e.target.value) || 1)}
-              min="1"
-              max={formData.maxNights}
-              className="mx-2 w-20 text-center"
-            />
-            <Button 
-              type="button" 
-              onClick={incrementNights}
-              className="px-3 py-2"
-              disabled={formData.nights >= formData.maxNights}
-            >
-              <Plus size={16} />
-            </Button>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">Maximum stay: {formData.maxNights} nights</p>
+          <p className="text-sm text-gray-700">
+            Selected stay: {differenceInDays(formData.endDate, formData.startDate)} nights
+          </p>
         </div>
       )}
     </div>

@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
-import { format, addMonths, eachDayOfInterval, isSameDay, isBefore, startOfMonth, endOfMonth, getDay } from 'date-fns';
+import { format, addMonths, eachDayOfInterval, isSameDay, isBefore, isWithinInterval, startOfMonth, endOfMonth, getDay } from 'date-fns';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CornerRightDown, CornerRightUp } from 'lucide-react';
 
-const ReservationCalendar = ({ availableSites, onDateSelect, selectedDate, siteType, onChangeMonth, startDate }) => {
+const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkOutDate, siteType, onChangeMonth, startDate }) => {
   const monthStart = startOfMonth(startDate);
   const monthEnd = endOfMonth(monthStart);
   const calendarStart = monthStart;
@@ -24,7 +24,13 @@ const ReservationCalendar = ({ availableSites, onDateSelect, selectedDate, siteT
 
   const handleDateClick = (day) => {
     if (!isBefore(day, new Date())) {
-      onDateSelect(day);
+      if (!checkInDate || (checkInDate && checkOutDate)) {
+        onDateSelect(day, null);
+      } else if (isBefore(day, checkInDate)) {
+        onDateSelect(day, checkInDate);
+      } else {
+        onDateSelect(checkInDate, day);
+      }
     }
   };
 
@@ -52,7 +58,7 @@ const ReservationCalendar = ({ availableSites, onDateSelect, selectedDate, siteT
             <div key={`empty-start-${index}`} className="text-center opacity-0">
               <div className="text-sm">&nbsp;</div>
               <div className="mt-1">
-                <Button variant="outline" size="sm" className="w-full h-12 invisible">
+                <Button variant="outline" size="sm" className="w-full h-16 invisible">
                   &nbsp;
                 </Button>
               </div>
@@ -61,7 +67,9 @@ const ReservationCalendar = ({ availableSites, onDateSelect, selectedDate, siteT
           {days.map((day) => {
             const dateStr = format(day, 'yyyy-MM-dd');
             const availableCount = availableSites[dateStr];
-            const isSelected = selectedDate && isSameDay(day, selectedDate);
+            const isCheckIn = checkInDate && isSameDay(day, checkInDate);
+            const isCheckOut = checkOutDate && isSameDay(day, checkOutDate);
+            const isInRange = checkInDate && checkOutDate && isWithinInterval(day, { start: checkInDate, end: checkOutDate });
             const isPast = isBefore(day, new Date());
 
             return (
@@ -72,21 +80,35 @@ const ReservationCalendar = ({ availableSites, onDateSelect, selectedDate, siteT
                     onClick={() => handleDateClick(day)} 
                     variant="outline" 
                     size="sm"
-                    className={`w-full h-12 flex flex-col items-center justify-center ${
-                      isSelected 
+                    className={`w-full h-16 flex flex-col items-center justify-center ${
+                      isCheckIn || isCheckOut
                         ? 'bg-blue-500 text-white' 
-                        : isPast
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : availableCount > 0
-                            ? 'bg-green-100 hover:bg-green-200 text-green-800'
-                            : 'bg-red-100 text-red-800 cursor-not-allowed'
+                        : isInRange
+                          ? 'bg-blue-100 text-blue-800'
+                          : isPast
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : availableCount > 0
+                              ? 'bg-green-100 hover:bg-green-200 text-green-800'
+                              : 'bg-red-100 text-red-800 cursor-not-allowed'
                     }`}
                     disabled={isPast || availableCount === 0}
                   >
-                    {isSelected ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <span className="text-xs">{availableCount ?? 'N/A'}</span>
+                    {isCheckIn && (
+                      <>
+                        <CornerRightDown className="h-4 w-4" />
+                        <span className="text-xs">Arrive</span>
+                      </>
+                    )}
+                    {isCheckOut && (
+                      <>
+                        <CornerRightUp className="h-4 w-4" />
+                        <span className="text-xs">Leave</span>
+                      </>
+                    )}
+                    {!isCheckIn && !isCheckOut && (
+                      <span className="text-xs">
+                        {availableCount ?? 'N/A'}
+                      </span>
                     )}
                   </Button>
                 </div>
