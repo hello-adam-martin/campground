@@ -13,7 +13,12 @@ const Header = () => {
   return (
     <header className="bg-blue-600 text-white">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Hurunui Hotel Campsite</h1>
+        <h1 
+          className="text-2xl font-bold cursor-pointer" 
+          onClick={() => navigate('/')}
+        >
+          Hurunui Hotel Campsite
+        </h1>
         <div className="flex space-x-4">
           <Button 
             onClick={() => navigate('/site-availability')} 

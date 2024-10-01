@@ -42,40 +42,54 @@ const ExtrasSelector = ({ selectedExtras, onExtrasChange, availableExtras = [] }
       {availableExtras.map((service) => (
         <div key={service.id} className="flex justify-between items-center">
           <span className="text-sm sm:text-base">{service.name} - ${service.price.toFixed(2)}</span>
-          {selectedExtras[service.id] ? (
-            <div className="flex items-center">
+          <div className="flex items-center justify-end">
+            {selectedExtras[service.id] ? (
+              <>
+                {service.allow_multiple && (
+                  <div className="flex items-center">
+                    <Button
+                      type="button"
+                      onClick={() => handleServiceQuantityChange(service, -1)}
+                      className="px-3 py-2"
+                    >
+                      <Minus size={16} />
+                    </Button>
+                    <Input
+                      type="number"
+                      value={selectedExtras[service.id].quantity}
+                      onChange={(e) => handleServiceQuantityChange(service, parseInt(e.target.value) - selectedExtras[service.id].quantity)}
+                      className="mx-2 w-16 text-center"
+                      readOnly
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => handleServiceQuantityChange(service, 1)}
+                      className="px-3 py-2"
+                    >
+                      <Plus size={16} />
+                    </Button>
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  onClick={() => handleServiceToggle(service)} // Remove item
+                  className="ml-2 text-xs sm:text-sm"
+                  variant="outline"
+                >
+                  Remove
+                </Button>
+              </>
+            ) : (
               <Button
                 type="button"
-                onClick={() => handleServiceQuantityChange(service, -1)}
-                className="px-3 py-2"
+                onClick={() => handleServiceToggle(service)}
+                variant="outline"
+                className="text-xs sm:text-sm"
               >
-                <Minus size={16} />
+                Add
               </Button>
-              <Input
-                type="number"
-                value={selectedExtras[service.id].quantity}
-                onChange={(e) => handleServiceQuantityChange(service, parseInt(e.target.value) - selectedExtras[service.id].quantity)}
-                className="mx-2 w-16 text-center"
-                readOnly
-              />
-              <Button
-                type="button"
-                onClick={() => handleServiceQuantityChange(service, 1)}
-                className="px-3 py-2"
-              >
-                <Plus size={16} />
-              </Button>
-            </div>
-          ) : (
-            <Button
-              type="button"
-              onClick={() => handleServiceToggle(service)}
-              variant="outline"
-              className="text-xs sm:text-sm"
-            >
-              Add
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       ))}
     </div>

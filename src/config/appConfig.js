@@ -71,19 +71,6 @@ const config = {
         }
       }*/
     ],
-    additionalServices: [
-      { id: 1, name: 'Dump Station', price: 5.00, allowMultiple: true },
-      { id: 4, name: 'Rubbish Bag and Disposal', price: 10.00, allowMultiple: true },
-    ],
-    rules: [
-      "Check-out time is 11 AM.",
-      "Quiet hours are from 10 PM to 9 AM.",
-      "Keep your campsite clean and free of litter.",
-      "No Fires. BBQ use is allowed.",
-      "Pets must be leashed at all times.",
-      "Please pick up after your pets.",
-      "All rubbish must be taken with you. Or purchase a rubbish bag from us.",
-    ],
     exampleReservations: [
       { id: 1, name: 'John Doe', email: 'john@example.com', phone: '123-456-7890', siteNumber: 'A1', checkInDate: '2024-09-10' },
       { id: 2, name: 'Jane Doe', email: 'jane@example.com', phone: '098-765-4321', siteNumber: 'B2', checkInDate: '2024-09-10' },
