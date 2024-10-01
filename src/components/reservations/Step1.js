@@ -1,14 +1,10 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import * as LucideIcons from 'lucide-react';
 import { Plus, Minus } from 'lucide-react';
 
 const Step1 = ({ siteTypes, formData, handleSiteTypeSelect, handleGuestCountChange }) => {
-  useEffect(() => {
-    console.log('Step1 - siteTypes:', siteTypes);
-    console.log('Step1 - formData:', formData);
-  }, [siteTypes, formData]);
 
   if (!Array.isArray(siteTypes) || siteTypes.length === 0) {
     return <p>Loading site types... (siteTypes: {JSON.stringify(siteTypes)})</p>;

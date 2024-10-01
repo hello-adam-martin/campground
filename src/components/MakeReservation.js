@@ -38,6 +38,7 @@ const MakeReservation = () => {
   const [availableSites, setAvailableSites] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const dataFetchedRef = useRef(false);
+  const [nights, setNights] = useState(1); // Added state for nights
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,8 +52,8 @@ const MakeReservation = () => {
           getAdditionalServices()
         ]);
 
-        console.log('Fetched site types:', fetchedSiteTypes);
-        console.log('Fetched additional services:', fetchedAdditionalServices);
+        //console.log('Fetched site types:', fetchedSiteTypes);
+        //console.log('Fetched additional services:', fetchedAdditionalServices);
 
         updateContext({
           siteTypes: fetchedSiteTypes,
@@ -79,10 +80,10 @@ const MakeReservation = () => {
             format(thirtyDaysLater, 'yyyy-MM-dd'),
             formData.siteType
           );
-          console.log('Fetched available sites:', sites);
+          //console.log('Fetched available sites:', sites);
           setAvailableSites(sites);
         } catch (error) {
-          console.error("Error fetching available sites:", error);
+          //console.error("Error fetching available sites:", error);
           setAvailableSites([]);
         } finally {
           setIsLoading(false);
@@ -93,21 +94,18 @@ const MakeReservation = () => {
   }, [formData.siteType]);
 
   const calculateTotalPrice = useCallback(() => {
-    if (!formData.startDate || !formData.nights || !formData.siteType) return 0;
-
     const selectedSiteType = siteTypes.find(type => type.id === formData.siteType);
     if (!selectedSiteType) return 0;
 
-    const basePrice = selectedSiteType.base_price * formData.nights;
-    
+    const basePrice = selectedSiteType.base_price * nights; // Use nights state
     const extraAdults = Math.max(0, formData.adultCount - selectedSiteType.base_guests);
-    const extraGuestPrice = extraAdults * selectedSiteType.extra_guest_price * formData.nights;
+    const extraGuestPrice = extraAdults * selectedSiteType.extra_guest_price * nights; // Use nights state
     
     const extrasPrice = Object.values(selectedExtras).reduce((total, item) => 
       total + (item.price * item.quantity), 0);
 
     return basePrice + extraGuestPrice + extrasPrice;
-  }, [formData.startDate, formData.nights, formData.siteType, formData.adultCount, selectedExtras, siteTypes]);
+}, [formData.siteType, formData.adultCount, selectedExtras, siteTypes, nights]); // Added nights to dependencies
 
   useEffect(() => {
     const total = calculateTotalPrice();
@@ -115,24 +113,26 @@ const MakeReservation = () => {
   }, [calculateTotalPrice]);
 
   const handleSiteTypeSelect = (typeId) => {
-    console.log('Selected site type:', typeId);
     setField('siteType', typeId);
+    calculateTotalPrice(); // Update total price when site type is selected
   };
 
   const handleDateSelect = (start, end) => {
     setField('startDate', start);
     setField('endDate', end);
+    const calculatedNights = end ? differenceInDays(end, start) : 1; // Assume 1 night if end date is not selected
+    setNights(Math.max(1, calculatedNights)); // Update nights based on selected dates
+    calculateTotalPrice();
   };
 
   const handleNightsChange = (nights) => {
-    console.log('Changed nights:', nights);
     setField('nights', Math.max(1, nights));
   };
 
   const handleGuestCountChange = (e) => {
     const { name, value } = e.target;
-    console.log('Changed guest count:', name, value);
     setField(name, Math.max(0, parseInt(value) || 0));
+    calculateTotalPrice(); // Update total price when guest count changes
   };
 
   const handleNext = () => {
@@ -144,12 +144,12 @@ const MakeReservation = () => {
       alert("Please select an arrival date and specify the number of nights.");
       return;
     }
-    console.log('Moving to next step:', step + 1);
+    //console.log('Moving to next step:', step + 1);
     setStep(step + 1);
   };
 
   const handlePrevious = () => {
-    console.log('Moving to previous step:', step - 1);
+    //console.log('Moving to previous step:', step - 1);
     setStep(step - 1);
   };
 
@@ -169,10 +169,10 @@ const MakeReservation = () => {
         totalPrice,
         extras: Object.values(selectedExtras)
       };
-      console.log('Creating reservation with data:', reservationData);
+      //console.log('Creating reservation with data:', reservationData);
       const result = await createReservation(reservationData);
       if (result.success) {
-        console.log('Reservation created successfully');
+        //console.log('Reservation created successfully');
         setStep(8);
       } else {
         throw new Error(result.error || 'Reservation creation failed');
@@ -184,7 +184,7 @@ const MakeReservation = () => {
   };
 
   const handlePaymentError = (errorMessage) => {
-    console.error('Payment failed:', errorMessage);
+    //console.error('Payment failed:', errorMessage);
     alert(`Payment failed: ${errorMessage}. Please try again or contact support.`);
   };
 
@@ -193,9 +193,9 @@ const MakeReservation = () => {
       return <p>Loading...</p>;
     }
 
-    console.log('Rendering step:', step);
-    console.log('Current form data:', formData);
-    console.log('Available sites:', availableSites);
+    //console.log('Rendering step:', step);
+    //console.log('Current form data:', formData);
+    //console.log('Available sites:', availableSites);
 
     switch(step) {
       case 1:
