@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, CornerRightDown, CornerRightUp } from 'lucid
 
 const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkOutDate, siteType, onChangeMonth, startDate }) => {
   const monthStart = startOfMonth(startDate);
-  const monthEnd = endOfMonth(monthStart);
+  // const monthEnd = endOfMonth(monthStart); // Removed unused variable
   const calendarStart = monthStart;
   const calendarEnd = endOfMonth(monthStart);
 
@@ -28,6 +28,8 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
         onDateSelect(day, null);
       } else if (isBefore(day, checkInDate)) {
         onDateSelect(day, checkInDate);
+      } else if (isSameDay(day, checkInDate)) { // Prevent same date for check-in and check-out
+        return; // Do nothing if the same date is selected
       } else {
         onDateSelect(checkInDate, day);
       }

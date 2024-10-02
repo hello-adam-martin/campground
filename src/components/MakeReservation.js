@@ -52,9 +52,6 @@ const MakeReservation = () => {
           getAdditionalServices()
         ]);
 
-        //console.log('Fetched site types:', fetchedSiteTypes);
-        //console.log('Fetched additional services:', fetchedAdditionalServices);
-
         updateContext({
           siteTypes: fetchedSiteTypes,
           additionalServices: fetchedAdditionalServices
@@ -74,16 +71,14 @@ const MakeReservation = () => {
         setIsLoading(true);
         try {
           const today = new Date();
-          const thirtyDaysLater = addDays(today, 30);
+          //const thirtyDaysLater = addDays(today, 30);
           const sites = await getAvailableSites(
             format(today, 'yyyy-MM-dd'),
-            format(thirtyDaysLater, 'yyyy-MM-dd'),
+            //format(thirtyDaysLater, 'yyyy-MM-dd'),
             formData.siteType
           );
-          //console.log('Fetched available sites:', sites);
           setAvailableSites(sites);
         } catch (error) {
-          //console.error("Error fetching available sites:", error);
           setAvailableSites([]);
         } finally {
           setIsLoading(false);
@@ -132,7 +127,7 @@ const MakeReservation = () => {
   const handleGuestCountChange = (e) => {
     const { name, value } = e.target;
     setField(name, Math.max(0, parseInt(value) || 0));
-    calculateTotalPrice(); // Update total price when guest count changes
+    calculateTotalPrice();
   };
 
   const handleNext = () => {
@@ -144,12 +139,10 @@ const MakeReservation = () => {
       alert("Please select an arrival date and specify the number of nights.");
       return;
     }
-    //console.log('Moving to next step:', step + 1);
     setStep(step + 1);
   };
 
   const handlePrevious = () => {
-    //console.log('Moving to previous step:', step - 1);
     setStep(step - 1);
   };
 
@@ -169,10 +162,8 @@ const MakeReservation = () => {
         totalPrice,
         extras: Object.values(selectedExtras)
       };
-      //console.log('Creating reservation with data:', reservationData);
       const result = await createReservation(reservationData);
       if (result.success) {
-        //console.log('Reservation created successfully');
         setStep(8);
       } else {
         throw new Error(result.error || 'Reservation creation failed');
@@ -184,7 +175,6 @@ const MakeReservation = () => {
   };
 
   const handlePaymentError = (errorMessage) => {
-    //console.error('Payment failed:', errorMessage);
     alert(`Payment failed: ${errorMessage}. Please try again or contact support.`);
   };
 
@@ -192,10 +182,6 @@ const MakeReservation = () => {
     if (isLoading) {
       return <p>Loading...</p>;
     }
-
-    //console.log('Rendering step:', step);
-    //console.log('Current form data:', formData);
-    //console.log('Available sites:', availableSites);
 
     switch(step) {
       case 1:
