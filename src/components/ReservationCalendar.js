@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { format, addMonths, eachDayOfInterval, isSameDay, isBefore, isWithinInterval, startOfMonth, endOfMonth, getDay } from 'date-fns';
+import { format, addMonths, eachDayOfInterval, isSameDay, isBefore, isAfter, isWithinInterval, startOfMonth, endOfMonth, getDay } from 'date-fns';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight, CornerRightDown, CornerRightUp } from 'lucide-react';
@@ -31,10 +31,18 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
       } else if (isSameDay(day, checkInDate)) { // Prevent same date for check-in and check-out
         return; // Do nothing if the same date is selected
       } else {
-        onDateSelect(checkInDate, day);
+        // New condition to allow selection of a new check-in date after a non-available date
+        if (checkoutOnlyDate && isAfter(day, checkoutOnlyDate)) {
+          onDateSelect(day, null); // Set new check-in date
+        } else {
+          onDateSelect(checkInDate, day);
+        }
       }
     }
   };
+
+  let firstNonAvailableEnabled = false; // Flag to track the first non-available date
+  let checkoutOnlyDate = null; // Track the date that is enabled for checkout only
 
   return (
     <Card>
@@ -74,7 +82,34 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
             const isInRange = checkInDate && checkOutDate && isWithinInterval(day, { start: checkInDate, end: checkOutDate });
             const isPast = isBefore(day, new Date());
 
-            return (
+            // Determine if the button should be disabled
+            let isDisabled = isPast;
+            let buttonLabel = availableCount ?? 'N/A'; // Default label
+            let buttonClass = ''; // Class for button styling
+
+            if (availableCount === 0) {
+              if (checkInDate && isBefore(checkInDate, day) && !firstNonAvailableEnabled) {
+                isDisabled = false; // Enable the first non-available date
+                buttonLabel = 'Checkout Only'; // Change label for the enabled non-available date
+                firstNonAvailableEnabled = true; // Set the flag to true after enabling
+                checkoutOnlyDate = day; // Track the checkout only date
+                buttonClass = 'cursor-pointer'; // Set cursor to pointer for "Checkout Only"
+              } else {
+                isDisabled = true; // Disable all other non-available dates
+              }
+            }
+
+            // Disable dates after the "Checkout Only" date if check-in date is before it
+            if (checkoutOnlyDate && isAfter(day, checkoutOnlyDate) && isBefore(checkInDate, checkoutOnlyDate)) {
+              isDisabled = true; // Disable all dates after the checkout only date
+            }
+
+            // Allow selection of dates after "Checkout Only" as new check-in dates, but only if they are available
+            if (checkoutOnlyDate && isAfter(day, checkoutOnlyDate) && availableCount > 0) {
+              isDisabled = false; // Enable dates after the checkout only date for check-in if available
+            }
+
+            return (  
               <div key={day.toISOString()} className="text-center">
                 <div className="text-sm">{format(day, 'd')}</div>
                 <div className="mt-1">
@@ -83,7 +118,7 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
                     variant="outline" 
                     size="sm"
                     className={`w-full h-16 flex flex-col items-center justify-center ${
-                      isCheckIn || isCheckOut
+                      (isCheckIn || isCheckOut)
                         ? 'bg-blue-500 text-white' 
                         : isInRange
                           ? 'bg-blue-100 text-blue-800'
@@ -92,8 +127,8 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
                             : availableCount > 0
                               ? 'bg-green-100 hover:bg-green-200 text-green-800'
                               : 'bg-red-100 text-red-800 cursor-not-allowed'
-                    }`}
-                    disabled={isPast || availableCount === 0}
+                    } ${buttonClass}`} // Combined className
+                    disabled={isDisabled}
                   >
                     {isCheckIn && (
                       <>
@@ -109,7 +144,7 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
                     )}
                     {!isCheckIn && !isCheckOut && (
                       <span className="text-xs">
-                        {availableCount ?? 'N/A'}
+                        {buttonLabel}
                       </span>
                     )}
                   </Button>
