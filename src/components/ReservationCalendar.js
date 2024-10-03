@@ -27,7 +27,8 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
       if (!checkInDate || (checkInDate && checkOutDate)) {
         onDateSelect(day, null);
       } else if (isBefore(day, checkInDate)) {
-        onDateSelect(day, checkInDate);
+        // If a new check-in date is chosen before the current check-in date
+        onDateSelect(day, null); // Set new check-in date and reset check-out date
       } else if (isSameDay(day, checkInDate)) { // Prevent same date for check-in and check-out
         return; // Do nothing if the same date is selected
       } else {
@@ -35,6 +36,10 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
         if (checkoutOnlyDate && isSameDay(day, checkoutOnlyDate) && !checkOutDate) {
           onDateSelect(checkInDate, day); // Set as check-out date
           return; // Exit after setting check-out
+        }
+        // Prevent selecting the check-out only date as check-in
+        if (checkoutOnlyDate && isSameDay(day, checkoutOnlyDate) && checkOutDate) {
+          return; // Do nothing if the check-out only date is clicked after check-out is set
         }
         // New condition to allow selection of a new check-in date after a non-available date
         if (checkoutOnlyDate && isAfter(day, checkoutOnlyDate)) {
