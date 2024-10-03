@@ -31,6 +31,11 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
       } else if (isSameDay(day, checkInDate)) { // Prevent same date for check-in and check-out
         return; // Do nothing if the same date is selected
       } else {
+        // Allow selection of the check-out only date for check-out
+        if (checkoutOnlyDate && isSameDay(day, checkoutOnlyDate) && !checkOutDate) {
+          onDateSelect(checkInDate, day); // Set as check-out date
+          return; // Exit after setting check-out
+        }
         // New condition to allow selection of a new check-in date after a non-available date
         if (checkoutOnlyDate && isAfter(day, checkoutOnlyDate)) {
           onDateSelect(day, null); // Set new check-in date
@@ -83,8 +88,8 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
             const isPast = isBefore(day, new Date());
 
             // Determine if the button should be disabled
-            let isDisabled = isPast;
-            let buttonLabel = availableCount ?? 'N/A'; // Default label
+            let isDisabled = isPast || (checkoutOnlyDate && isSameDay(day, checkoutOnlyDate) && checkOutDate); // Disable if it's the checkout only date and check-out is set
+            let buttonLabel = availableCount > 0 ? availableCount : 'Unavailable'; // Change label for unavailable dates
             let buttonClass = ''; // Class for button styling
 
             if (availableCount === 0) {
@@ -99,9 +104,9 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
               }
             }
 
-            // Disable dates after the "Checkout Only" date if check-in date is before it
-            if (checkoutOnlyDate && isAfter(day, checkoutOnlyDate) && isBefore(checkInDate, checkoutOnlyDate)) {
-              isDisabled = true; // Disable all dates after the checkout only date
+            // Disable the checkout only date if it has been selected as a check-out date
+            if (checkoutOnlyDate && isSameDay(day, checkoutOnlyDate) && checkOutDate) {
+              isDisabled = true; // Disable the checkout only date if check-out is set
             }
 
             // Allow selection of dates after "Checkout Only" as new check-in dates, but only if they are available
@@ -144,7 +149,7 @@ const ReservationCalendar = ({ availableSites, onDateSelect, checkInDate, checkO
                     )}
                     {!isCheckIn && !isCheckOut && (
                       <span className="text-xs">
-                        {buttonLabel}
+                        {buttonLabel} {/* Display "Unavailable" for unavailable dates */}
                       </span>
                     )}
                   </Button>
