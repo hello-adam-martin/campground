@@ -5,6 +5,9 @@ const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 router.post('/create-payment-intent', async (req, res) => {
+
+  console.log('Received payment request:', req.body);
+
   try {
     const { amount, currency } = req.body;
 

@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { getAvailableSitesByTypeAndDate } from '../../services/api'; // Import the new function
 
 const Step3 = ({ formData, handleInputChange, siteTypes }) => {
-  const selectedSiteType = siteTypes.find(type => type.id === formData.siteType);
-  const availableSites = selectedSiteType?.sites || [];
+  const [availableSites, setAvailableSites] = useState([]);
+
+  useEffect(() => {
+    const fetchAvailableSites = async () => {
+      if (formData.siteType && formData.startDate && formData.endDate) {
+        try {
+          const sites = await getAvailableSitesByTypeAndDate(formData.startDate, formData.endDate, formData.siteType);
+          setAvailableSites(sites);
+        } catch (error) {
+          console.error('Error fetching available sites:', error);
+        }
+      }
+    };
+
+    fetchAvailableSites();
+  }, [formData.siteType, formData.startDate, formData.endDate]);
 
   return (
     <>
@@ -10,7 +25,7 @@ const Step3 = ({ formData, handleInputChange, siteTypes }) => {
       <div className="space-y-4">
         {availableSites.length > 0 ? (
           <div>
-            <label htmlFor="siteNumber" className="block text-sm font-medium text-gray-700 mb-1">Available Sites</label>
+            <label htmlFor="siteId" className="block text-sm font-medium text-gray-700 mb-1">Available Sites</label>
             <select
               id="siteNumber"
               name="siteNumber"
@@ -21,12 +36,12 @@ const Step3 = ({ formData, handleInputChange, siteTypes }) => {
             >
               <option value="">Select an available site</option>
               {availableSites.map(site => (
-                <option key={site.id} value={site.number}>{site.number}</option>
+                <option key={site.id} value={site.id}>{site.number}</option> // Use 'site.id' as the value and 'site.number' as the label
               ))}
             </select>
           </div>
         ) : (
-          <p className="text-red-500">No sites available for the selected type. Please go back and choose a different site type.</p>
+          <p className="text-red-500">No sites available for the selected type and dates. Please go back and choose a different site type or dates.</p>
         )}
       </div>
     </>

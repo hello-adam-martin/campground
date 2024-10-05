@@ -10,8 +10,7 @@ import Step2 from './reservations/Step2';
 import Step3 from './reservations/Step3';
 import Step4 from './reservations/Step4';
 import Step5 from './reservations/Step5';
-import Step6 from './reservations/Step6';
-import Step7 from './reservations/Step7';
+import Step6And7 from './reservations/Step6And7'; // Import the new combined component
 import Step8 from './reservations/Step8';
 import { getSiteTypes, getAvailableSites, createReservation, getAdditionalServices } from '../services/api';
 import { addDays, format, differenceInDays } from 'date-fns';
@@ -135,8 +134,8 @@ const MakeReservation = () => {
       alert("Please select a site type.");
       return;
     }
-    if (step === 2 && (!formData.startDate || formData.nights < 1)) {
-      alert("Please select an arrival date and specify the number of nights.");
+    if (step === 2 && (!formData.startDate || !formData.endDate)) {
+      alert("Please select dates you wish to stay.");
       return;
     }
     setStep(step + 1);
@@ -149,10 +148,10 @@ const MakeReservation = () => {
   const handlePaymentSuccess = async (paymentIntent) => {
     try {
       const reservationData = {
-        siteId: formData.siteNumber || null,
-        siteType: formData.siteType,
+        siteId: formData.siteId || null,
+        //siteType: formData.siteType,
         startDate: format(formData.startDate, 'yyyy-MM-dd'),
-        endDate: format(addDays(formData.startDate, formData.nights - 1), 'yyyy-MM-dd'),
+        endDate: format(formData.endDate, 'yyyy-MM-dd'),
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -226,19 +225,13 @@ const MakeReservation = () => {
             availableExtras={additionalServices}
           />
         );
-      case 6:
+      case 6: // Update this case to render the combined step
         return (
-          <Step6
+          <Step6And7
             formData={formData}
             selectedExtras={selectedExtras}
             totalPrice={totalPrice}
             siteTypes={siteTypes}
-          />
-        );
-      case 7:
-        return (
-          <Step7
-            totalPrice={totalPrice}
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
           />
@@ -267,8 +260,7 @@ const MakeReservation = () => {
           "Select specific site",
           "Enter guest details",
           "Add extras",
-          "Review reservation",
-          "Make payment",
+          "Review & Payment", // Updated step name to reflect the combined step
           "Confirmation"
         ].map((stepName, index) => (
           <li key={index} className={`flex items-center space-x-2 ${step === index + 1 ? 'text-blue-600 font-semibold' : ''}`}>

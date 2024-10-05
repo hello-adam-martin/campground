@@ -69,6 +69,43 @@ export const getAvailableSites = async (startDate, siteType) => {
   }
 };
 
+export const getAvailableSitesByTypeAndDate = async (startDate, endDate, siteType) => {
+  console.log('Fetching available sites for:', { startDate, endDate, siteType });
+
+  try {
+    // Get the total number of sites for the given site type
+    const { data: totalSites, error: totalSitesError } = await supabase
+      .from('sites')
+      .select('id, number') // Ensure 'number' is included
+      .eq('site_type_id', siteType);
+
+    if (totalSitesError) throw totalSitesError;
+
+    // Extract site IDs from the totalSites
+    const siteIds = totalSites.map(site => site.id);
+
+    // Get all reservations for the given site type and date range
+    const { data: reservations, error: reservationsError } = await supabase
+      .from('reservations')
+      .select('site_id')
+      .in('site_id', siteIds) // Use the extracted site IDs
+      .or(`and(start_date.lte.${format(endDate, 'yyyy-MM-dd')},end_date.gte.${format(startDate, 'yyyy-MM-dd')})`);
+
+    if (reservationsError) throw reservationsError;
+
+    // Calculate availability for each site
+    const availableSites = totalSites.filter(site => 
+      !reservations.some(res => res.site_id === site.id)
+    );
+
+    console.log('Available sites:', availableSites);
+    return availableSites; // Ensure this returns the correct structure
+  } catch (error) {
+    console.error('Error fetching available sites:', error);
+    throw error;
+  }
+};
+
 export const getAdditionalServices = async () => {
   const { data, error } = await supabase
     .from('additional_services')
@@ -102,8 +139,7 @@ export const createReservation = async (reservationData) => {
       .from('reservations')
       .insert([
         {
-          site_id: reservationData.siteId, // This can be null now
-          site_type: reservationData.siteType, // Add this line
+          site_id: reservationData.siteId,
           start_date: reservationData.startDate,
           end_date: reservationData.endDate,
           guest_name: `${reservationData.firstName} ${reservationData.lastName}`,
