@@ -70,10 +70,8 @@ const MakeReservation = () => {
         setIsLoading(true);
         try {
           const today = new Date();
-          //const thirtyDaysLater = addDays(today, 30);
           const sites = await getAvailableSites(
             format(today, 'yyyy-MM-dd'),
-            //format(thirtyDaysLater, 'yyyy-MM-dd'),
             formData.siteType
           );
           setAvailableSites(sites);
@@ -99,7 +97,7 @@ const MakeReservation = () => {
       total + (item.price * item.quantity), 0);
 
     return basePrice + extraGuestPrice + extrasPrice;
-}, [formData.siteType, formData.adultCount, selectedExtras, siteTypes, nights]); // Added nights to dependencies
+  }, [formData.siteType, formData.adultCount, selectedExtras, siteTypes, nights]); // Added nights to dependencies
 
   useEffect(() => {
     const total = calculateTotalPrice();
@@ -149,7 +147,6 @@ const MakeReservation = () => {
     try {
       const reservationData = {
         siteId: formData.siteId || null,
-        //siteType: formData.siteType,
         startDate: format(formData.startDate, 'yyyy-MM-dd'),
         endDate: format(formData.endDate, 'yyyy-MM-dd'),
         firstName: formData.firstName,
@@ -281,36 +278,43 @@ const MakeReservation = () => {
           </li>
         ))}
       </ul>
-      {step !== 8 && (
+      {step === 6 ? ( // Show payment instructions when on step 6
         <div className="mt-6 pt-6 border-t border-gray-200">
-          <h4 className="font-semibold mb-2 flex items-center">
-            <Calendar className="mr-2 h-5 w-5 text-blue-500" />
-            Reservation Summary
-          </h4>
-          <p><strong>Site Type:</strong> {formData.siteType ? siteTypes.find(type => type.id === formData.siteType)?.name : 'Not selected'}</p>
-          {formData.startDate && formData.endDate && (
-          <>
-          <p><strong>Check-in:</strong> {format(formData.startDate, 'MMM d, yyyy')}</p>
-          <p><strong>Check-out:</strong> {format(formData.endDate, 'MMM d, yyyy')}</p>
-          <p><strong>Nights:</strong> {differenceInDays(formData.endDate, formData.startDate)}</p>
-          </>
-          )}
-          {formData.siteNumber && <p><strong>Site Number:</strong> {formData.siteNumber}</p>}
-          <p><strong>Guests:</strong> {formData.adultCount} Adults, {formData.childCount} Children</p>
-          {Object.values(selectedExtras).length > 0 && (
-            <>
-              <p className="font-semibold mt-2">Additional Services:</p>
-              <ul className="list-disc pl-5">
-                {Object.values(selectedExtras).map(service => (
-                  <li key={service.id}>
-                    {service.name} (x{service.quantity})
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-          <p className="font-bold mt-2">Total Price: ${totalPrice.toFixed(2)}</p>
+          <h4 className="font-semibold mb-2">Payment Instructions</h4>
+          <p>Please review your reservation details above. If everything is correct, click "Proceed to Payment" to complete your booking.</p>
         </div>
+      ) : (
+        step !== 8 && ( // Only show reservation summary if not on step 6 or 8
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="font-semibold mb-2 flex items-center">
+              <Calendar className="mr-2 h-5 w-5 text-blue-500" />
+              Reservation Summary
+            </h4>
+            <p><strong>Site Type:</strong> {formData.siteType ? siteTypes.find(type => type.id === formData.siteType)?.name : 'Not selected'}</p>
+            {formData.startDate && formData.endDate && (
+            <>
+            <p><strong>Check-in:</strong> {format(formData.startDate, 'MMM d, yyyy')}</p>
+            <p><strong>Check-out:</strong> {format(formData.endDate, 'MMM d, yyyy')}</p>
+            <p><strong>Nights:</strong> {differenceInDays(formData.endDate, formData.startDate)}</p>
+            </>
+            )}
+            {formData.siteNumber && <p><strong>Site Number:</strong> {formData.siteNumber}</p>}
+            <p><strong>Guests:</strong> {formData.adultCount} Adults, {formData.childCount} Children</p>
+            {Object.values(selectedExtras).length > 0 && (
+              <>
+                <p className="font-semibold mt-2">Additional Services:</p>
+                <ul className="list-disc pl-5">
+                  {Object.values(selectedExtras).map(service => (
+                    <li key={service.id}>
+                      {service.name} (x{service.quantity})
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <p className="font-bold mt-2">Total Price: ${totalPrice.toFixed(2)}</p>
+          </div>
+        )
       )}
     </div>
   );
@@ -323,7 +327,7 @@ const MakeReservation = () => {
       sidebar={renderSidebar()}
     >
       {renderStepContent()}
-      {step < 7 && (
+      {step < 6 && ( // Only show the Next button if the step is less than 7
         <div className="flex justify-between mt-6">
           {step > 1 && (
             <Button 
